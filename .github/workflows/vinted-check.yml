@@ -1,0 +1,39 @@
+name: Vinted Monitor
+
+on:
+  schedule:
+    # co 15 minut
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}  # pozwala odpalic recznie z zakladki Actions
+
+permissions:
+  contents: write  # potrzebne, zeby skrypt mogl zapisac plik z widzianymi ofertami
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run monitor
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python vinted_monitor.py
+
+      - name: Save seen items back to repo
+        run: |
+          git config user.name "vinted-monitor-bot"
+          git config user.email "actions@github.com"
+          git add vinted_seen_items.json
+          git diff --quiet --cached || git commit -m "update seen items"
+          git push
