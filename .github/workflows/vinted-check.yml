@@ -3,7 +3,7 @@ name: Vinted Monitor
 on:
   schedule:
     # co 15 minut
-    - cron: "*/15 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch: {}  # pozwala odpalic recznie z zakladki Actions
 
 permissions:
