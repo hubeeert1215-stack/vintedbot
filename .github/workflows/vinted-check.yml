@@ -1,13 +1,12 @@
 name: Vinted Monitor
 
 on:
-  schedule:
-    # co 15 minut
-    - cron: "*/5 * * * *"
-  workflow_dispatch: {}  # pozwala odpalic recznie z zakladki Actions
+  repository_dispatch:
+    types: [check-vinted]
+  workflow_dispatch: {}
 
 permissions:
-  contents: write  # potrzebne, zeby skrypt mogl zapisac plik z widzianymi ofertami
+  contents: write
 
 jobs:
   check:
