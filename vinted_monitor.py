@@ -116,6 +116,8 @@ def check_watchlist():
             print(f"Blad zapytania dla '{query}': {e}")
             continue
 
+        print(f"Fraza '{query}': pobrano {len(items)} ofert z Vinted.")
+
         for item in items:
             item_id = str(item.get("id"))
             if item_id in seen_items:
