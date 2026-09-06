@@ -63,7 +63,6 @@ WATCHLIST = [
     {"query": "patagonia kurtka puchowa", "max_price": 108, "min_price": 0},
 
     # Luksusowe/drogie marki - realna okazja
-    {"query": "moncler kurtka", "max_price": 120, "min_price": 0},
     {"query": "canada goose kurtka", "max_price": 120, "min_price": 0},
     {"query": "stone island kurtka", "max_price": 108, "min_price": 0},
     {"query": "burberry kurtka", "max_price": 96, "min_price": 0},
@@ -72,7 +71,6 @@ WATCHLIST = [
     {"query": "supreme bluza", "max_price": 72, "min_price": 0},
     {"query": "cp company kurtka", "max_price": 108, "min_price": 0},
     {"query": "arcteryx kurtka", "max_price": 120, "min_price": 0},
-    {"query": "off white bluza", "max_price": 108, "min_price": 0},
 ]
 CHECK_INTERVAL_SECONDS = 300  # 5 minut - odstęp między sprawdzeniami przy trybie ciągłym
 SEEN_ITEMS_FILE = "vinted_seen_items.json"
