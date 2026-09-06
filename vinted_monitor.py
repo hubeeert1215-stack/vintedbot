@@ -42,11 +42,38 @@ VINTED_DOMAIN = "www.vinted.pl"  # zmień na swoją domenę Vinted (np. www.vint
 
 # Lista monitorowanych produktów: fraza wyszukiwania + maksymalna cena "dobrej okazji"
 WATCHLIST = [
-    {"query": "bluza adidas originals", "max_price": 60, "min_price": 0},
-    {"query": "adidas firebird", "max_price": 80, "min_price": 0},
-    {"query": "patagonia synchilla", "max_price": 90, "min_price": 0},
-]
+    # Adidas
+    {"query": "bluza adidas originals", "max_price": 48, "min_price": 0},
+    {"query": "adidas firebird", "max_price": 60, "min_price": 0},
 
+    # Carhartt
+    {"query": "carhartt kurtka detroit", "max_price": 85, "min_price": 0},
+    {"query": "carhartt active jacket", "max_price": 85, "min_price": 0},
+    {"query": "carhartt wip kurtka", "max_price": 72, "min_price": 0},
+    {"query": "carhartt vintage kurtka", "max_price": 95, "min_price": 0},
+
+    # Ralph Lauren
+    {"query": "ralph lauren polo vintage", "max_price": 48, "min_price": 0},
+    {"query": "ralph lauren kurtka", "max_price": 72, "min_price": 0},
+    {"query": "polo ralph lauren sweter", "max_price": 48, "min_price": 0},
+
+    # Patagonia
+    {"query": "patagonia synchilla", "max_price": 72, "min_price": 0},
+    {"query": "patagonia retro x", "max_price": 120, "min_price": 0},
+    {"query": "patagonia kurtka puchowa", "max_price": 108, "min_price": 0},
+
+    # Luksusowe/drogie marki - realna okazja
+    {"query": "moncler kurtka", "max_price": 120, "min_price": 0},
+    {"query": "canada goose kurtka", "max_price": 120, "min_price": 0},
+    {"query": "stone island kurtka", "max_price": 108, "min_price": 0},
+    {"query": "burberry kurtka", "max_price": 96, "min_price": 0},
+    {"query": "barbour kurtka woskowana", "max_price": 85, "min_price": 0},
+    {"query": "the north face nuptse vintage", "max_price": 96, "min_price": 0},
+    {"query": "supreme bluza", "max_price": 72, "min_price": 0},
+    {"query": "cp company kurtka", "max_price": 108, "min_price": 0},
+    {"query": "arcteryx kurtka", "max_price": 120, "min_price": 0},
+    {"query": "off white bluza", "max_price": 108, "min_price": 0},
+]
 CHECK_INTERVAL_SECONDS = 300  # 5 minut - odstęp między sprawdzeniami przy trybie ciągłym
 SEEN_ITEMS_FILE = "vinted_seen_items.json"
 
