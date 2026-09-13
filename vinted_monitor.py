@@ -1,31 +1,14 @@
 """
 Vinted Monitor - wykrywa nowe oferty pasujące do zadanych fraz i progów cenowych,
-wysyła powiadomienia na Telegram.
+z filtrem marki w tytule (odrzuca spam/keyword-stuffing w opisach),
+wysyla powiadomienia na Telegram.
 
 WYMAGANIA:
     pip install requests
 
 KONFIGURACJA:
-    1. Utwórz bota na Telegramie przez @BotFather -> dostaniesz TELEGRAM_BOT_TOKEN
-    2. Napisz do swojego bota cokolwiek, potem wejdź na:
-       https://api.telegram.org/bot<TOKEN>/getUpdates
-       i odczytaj swój "chat_id"
-    3. Uzupełnij sekcję CONFIG poniżej
-
-URUCHAMIANIE:
-    Najlepiej jako zadanie cykliczne (np. cron co 5 minut):
-        */5 * * * * /usr/bin/python3 /sciezka/do/vinted_monitor.py
-
-    Można też uruchomić jednorazowo, żeby sprawdzić działanie:
-        python3 vinted_monitor.py
-
-UWAGA:
-    - Vinted nie udostępnia oficjalnego publicznego API do tego celu - skrypt
-      korzysta z tego samego endpointu, którego używa wyszukiwarka na stronie.
-      Zbyt częste odpytywanie (np. co kilka sekund) może skutkować
-      ograniczeniem/blokadą - odstęp 5 minut jest bezpieczny.
-    - Progi cenowe ("dobra cena") ustawiasz sam, na podstawie własnej wiedzy
-      o rynku dla danego produktu.
+    Patrz sekcja CONFIG ponizej - token bota i chat_id sa wczytywane
+    ze zmiennych srodowiskowych (ustawianych jako sekrety w GitHub Actions).
 """
 
 import json
@@ -38,41 +21,73 @@ import requests
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "TUTAJ_WKLEJ_TOKEN_BOTA")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "TUTAJ_WKLEJ_CHAT_ID")
 
-VINTED_DOMAIN = "www.vinted.pl"  # zmień na swoją domenę Vinted (np. www.vinted.de)
+VINTED_DOMAIN = "www.vinted.pl"
 
-# Lista monitorowanych produktów: fraza wyszukiwania + maksymalna cena "dobrej okazji"
+# Lista monitorowanych produktow. Kazdy wpis:
+#   query          - fraza wyszukiwania na Vinted
+#   max_price      - maksymalna cena "dobrej okazji"
+#   min_price      - minimalna cena (domyslnie 0)
+#   brand_keywords - lista slow kluczowych; oferta MUSI miec jedno z nich
+#                    w TYTULE (nie tylko w opisie), inaczej zostanie odrzucona
+#                    jako falszywe trafienie (spam slowami-kluczami w opisie)
 WATCHLIST = [
     # Adidas
-    {"query": "bluza adidas originals", "max_price": 48, "min_price": 0},
-    {"query": "adidas firebird", "max_price": 60, "min_price": 0},
+    {"query": "bluza adidas originals", "max_price": 48, "min_price": 0,
+     "brand_keywords": ["adidas"]},
+    {"query": "adidas firebird", "max_price": 60, "min_price": 0,
+     "brand_keywords": ["adidas", "firebird"]},
 
     # Carhartt
-    {"query": "carhartt kurtka detroit", "max_price": 85, "min_price": 0},
-    {"query": "carhartt active jacket", "max_price": 85, "min_price": 0},
-    {"query": "carhartt wip kurtka", "max_price": 72, "min_price": 0},
-    {"query": "carhartt vintage kurtka", "max_price": 95, "min_price": 0},
+    {"query": "carhartt kurtka detroit", "max_price": 85, "min_price": 0,
+     "brand_keywords": ["carhartt"]},
+    {"query": "carhartt active jacket", "max_price": 85, "min_price": 0,
+     "brand_keywords": ["carhartt"]},
+    {"query": "carhartt wip kurtka", "max_price": 72, "min_price": 0,
+     "brand_keywords": ["carhartt"]},
+    {"query": "carhartt vintage kurtka", "max_price": 95, "min_price": 0,
+     "brand_keywords": ["carhartt"]},
 
-    # Ralph Lauren
-    {"query": "ralph lauren polo vintage", "max_price": 48, "min_price": 0},
-    {"query": "ralph lauren kurtka", "max_price": 72, "min_price": 0},
-    {"query": "polo ralph lauren sweter", "max_price": 48, "min_price": 0},
+    # Ralph Lauren (obnizone progi - to bardzo popularna marka na Vinted,
+    # wiec ogranicza to liczbe "zwyklych" trafien)
+    {"query": "ralph lauren polo vintage", "max_price": 35, "min_price": 0,
+     "brand_keywords": ["ralph lauren", "polo ralph", "ralph"]},
+    {"query": "ralph lauren kurtka", "max_price": 50, "min_price": 0,
+     "brand_keywords": ["ralph lauren", "polo ralph", "ralph"]},
+    {"query": "polo ralph lauren sweter", "max_price": 35, "min_price": 0,
+     "brand_keywords": ["ralph lauren", "polo ralph", "ralph"]},
 
     # Patagonia
-    {"query": "patagonia synchilla", "max_price": 72, "min_price": 0},
-    {"query": "patagonia retro x", "max_price": 120, "min_price": 0},
-    {"query": "patagonia kurtka puchowa", "max_price": 108, "min_price": 0},
+    {"query": "patagonia synchilla", "max_price": 72, "min_price": 0,
+     "brand_keywords": ["patagonia"]},
+    {"query": "patagonia retro x", "max_price": 120, "min_price": 0,
+     "brand_keywords": ["patagonia"]},
+    {"query": "patagonia kurtka puchowa", "max_price": 108, "min_price": 0,
+     "brand_keywords": ["patagonia"]},
 
     # Luksusowe/drogie marki - realna okazja
-    {"query": "canada goose kurtka", "max_price": 120, "min_price": 0},
-    {"query": "stone island kurtka", "max_price": 108, "min_price": 0},
-    {"query": "burberry kurtka", "max_price": 96, "min_price": 0},
-    {"query": "barbour kurtka woskowana", "max_price": 85, "min_price": 0},
-    {"query": "the north face nuptse vintage", "max_price": 96, "min_price": 0},
-    {"query": "supreme bluza", "max_price": 72, "min_price": 0},
-    {"query": "cp company kurtka", "max_price": 108, "min_price": 0},
-    {"query": "arcteryx kurtka", "max_price": 120, "min_price": 0},
+    {"query": "moncler kurtka", "max_price": 120, "min_price": 0,
+     "brand_keywords": ["moncler"]},
+    {"query": "canada goose kurtka", "max_price": 120, "min_price": 0,
+     "brand_keywords": ["canada goose", "canada-goose"]},
+    {"query": "stone island kurtka", "max_price": 108, "min_price": 0,
+     "brand_keywords": ["stone island", "stone-island"]},
+    {"query": "burberry kurtka", "max_price": 96, "min_price": 0,
+     "brand_keywords": ["burberry"]},
+    {"query": "barbour kurtka woskowana", "max_price": 85, "min_price": 0,
+     "brand_keywords": ["barbour"]},
+    {"query": "the north face nuptse vintage", "max_price": 96, "min_price": 0,
+     "brand_keywords": ["north face", "tnf", "nuptse"]},
+    {"query": "supreme bluza", "max_price": 72, "min_price": 0,
+     "brand_keywords": ["supreme"]},
+    {"query": "cp company kurtka", "max_price": 108, "min_price": 0,
+     "brand_keywords": ["cp company", "c.p. company", "c.p.company"]},
+    {"query": "arcteryx kurtka", "max_price": 120, "min_price": 0,
+     "brand_keywords": ["arcteryx", "arc'teryx", "arc teryx"]},
+    {"query": "off white bluza", "max_price": 108, "min_price": 0,
+     "brand_keywords": ["off white", "off-white", "offwhite"]},
 ]
-CHECK_INTERVAL_SECONDS = 300  # 5 minut - odstęp między sprawdzeniami przy trybie ciągłym
+
+CHECK_INTERVAL_SECONDS = 300
 SEEN_ITEMS_FILE = "vinted_seen_items.json"
 
 # ============== KOD ==============
@@ -109,20 +124,23 @@ def send_telegram_message(text):
 
 
 def search_vinted(query, session, order="newest_first", per_page=20):
-    """Odpytuje endpoint wyszukiwania Vinted i zwraca liste ofert."""
     url = f"https://{VINTED_DOMAIN}/api/v2/catalog/items"
     params = {
         "search_text": query,
         "order": order,
         "per_page": per_page,
     }
-    # Vinted czesto wymaga wczesniejszego pobrania ciasteczek z glownej strony,
-    # zeby zaakceptowac zapytania do API - stad request do strony glownej ponizej.
     session.get(f"https://{VINTED_DOMAIN}/", headers=HEADERS, timeout=10)
     resp = session.get(url, headers=HEADERS, params=params, timeout=10)
     resp.raise_for_status()
     data = resp.json()
     return data.get("items", [])
+
+
+def title_matches_brand(title, brand_keywords):
+    """Sprawdza czy tytul oferty faktycznie zawiera jedno ze slow-kluczy marki."""
+    title_lower = title.lower()
+    return any(keyword.lower() in title_lower for keyword in brand_keywords)
 
 
 def check_watchlist():
@@ -134,6 +152,7 @@ def check_watchlist():
         query = entry["query"]
         max_price = entry.get("max_price")
         min_price = entry.get("min_price", 0)
+        brand_keywords = entry.get("brand_keywords", [])
 
         try:
             items = search_vinted(query, session)
@@ -148,13 +167,17 @@ def check_watchlist():
             if item_id in seen_items:
                 continue
 
+            title = item.get("title", "")
+            seen_items.add(item_id)
+
+            # Odrzuc falszywe trafienia - marka musi byc faktycznie w tytule
+            if brand_keywords and not title_matches_brand(title, brand_keywords):
+                continue
+
             price_info = item.get("price", {})
             price = float(price_info.get("amount", 0))
 
-            seen_items.add(item_id)
-
             if min_price <= price <= (max_price if max_price is not None else float("inf")):
-                title = item.get("title", "brak tytulu")
                 item_url = item.get("url", "")
                 new_matches.append(
                     f"🟢 <b>{title}</b>\n"
@@ -185,6 +208,4 @@ def run_forever():
 
 
 if __name__ == "__main__":
-    # Domyslnie uruchamia jedno sprawdzenie - do pracy ciaglej w tle
-    # zamien ponizsza linie na run_forever(), albo odpalaj przez cron.
     run_once()
