@@ -47,8 +47,7 @@ WATCHLIST = [
     {"query": "carhartt vintage kurtka", "max_price": 95, "min_price": 0,
      "brand_keywords": ["carhartt"]},
 
-    # Ralph Lauren (obnizone progi - to bardzo popularna marka na Vinted,
-    # wiec ogranicza to liczbe "zwyklych" trafien)
+    # Ralph Lauren (obnizone progi - to bardzo popularna marka na Vinted)
     {"query": "ralph lauren polo vintage", "max_price": 35, "min_price": 0,
      "brand_keywords": ["ralph lauren", "polo ralph", "ralph"]},
     {"query": "ralph lauren kurtka", "max_price": 50, "min_price": 0,
@@ -85,6 +84,38 @@ WATCHLIST = [
      "brand_keywords": ["arcteryx", "arc'teryx", "arc teryx"]},
     {"query": "off white bluza", "max_price": 108, "min_price": 0,
      "brand_keywords": ["off white", "off-white", "offwhite"]},
+
+    # Salomon
+    {"query": "salomon xt-6", "max_price": 100, "min_price": 0,
+     "brand_keywords": ["salomon"]},
+    {"query": "salomon speedcross", "max_price": 80, "min_price": 0,
+     "brand_keywords": ["salomon"]},
+
+    # New Balance
+    {"query": "new balance 990", "max_price": 100, "min_price": 0,
+     "brand_keywords": ["new balance"]},
+    {"query": "new balance made in usa", "max_price": 100, "min_price": 0,
+     "brand_keywords": ["new balance"]},
+
+    # Nike vintage / ACG
+    {"query": "nike acg vintage", "max_price": 90, "min_price": 0,
+     "brand_keywords": ["nike acg", "acg"]},
+    {"query": "nike vintage bluza", "max_price": 60, "min_price": 0,
+     "brand_keywords": ["nike"]},
+
+    # Levi's vintage
+    {"query": "levis 501 vintage", "max_price": 60, "min_price": 0,
+     "brand_keywords": ["levis", "levi's", "levi"]},
+    {"query": "levis kurtka trucker vintage", "max_price": 70, "min_price": 0,
+     "brand_keywords": ["levis", "levi's", "levi"]},
+
+    # Fred Perry vintage
+    {"query": "fred perry vintage", "max_price": 50, "min_price": 0,
+     "brand_keywords": ["fred perry"]},
+
+    # Y-3
+    {"query": "y-3 yohji yamamoto", "max_price": 120, "min_price": 0,
+     "brand_keywords": ["y-3", "y3", "yohji"]},
 ]
 
 CHECK_INTERVAL_SECONDS = 300
@@ -209,3 +240,4 @@ def run_forever():
 
 if __name__ == "__main__":
     run_once()
+
